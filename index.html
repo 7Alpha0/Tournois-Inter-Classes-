@@ -24,7 +24,11 @@
         .btn-action { padding: 6px 10px; background-color: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-left: 2px; }
         .btn-null { background-color: #64748b; }
         .btn-team-b { background-color: #3b82f6; }
-        .btn-bonus { padding: 6px 10px; background-color: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-top: 4px; }
+        
+        .bonus-box { background-color: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .bonus-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .btn-bonus-opt { padding: 8px 12px; background-color: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; flex: 1; min-width: 70px; }
+        .btn-bonus-all { padding: 8px 12px; background-color: #ec4899; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; flex: 1; min-width: 70px; }
 
         .hidden { display: none !important; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #0f172a; border-radius: 8px; margin-bottom: 8px; border: 1px solid #334155; flex-wrap: wrap; gap: 10px; }
@@ -86,7 +90,8 @@
 
         <!-- Zone des Paris -->
         <div id="bets-card" class="card hidden">
-            <h3>⚽ Parier sur un Match</h3>
+            <h3>⚽ Parier sur un Match (Coût : 100 PTS)</h3>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">En cas de gain, vous gagnez un solde net de +100 PTS (+200 PTS crédités au total).</p>
             <div id="matches-list">
                 <!-- Matchs affichés dynamiquement -->
             </div>
@@ -122,10 +127,35 @@
             <h3>1. Demandes d'accès en attente</h3>
             <div id="admin-requests" style="margin-bottom: 20px;"></div>
 
-            <h3>2. Gestion des Élèves (Bonus Week-end)</h3>
-            <div id="admin-users-list" style="margin-bottom: 20px;"></div>
+            <h3>2. Distribution de Bonus Express</h3>
+            
+            <!-- Bonus pour Personne Ciblée -->
+            <div class="bonus-box">
+                <label style="color: #8b5cf6; font-weight: bold;">🎯 Bonus pour UNE Personne Ciblée :</label>
+                <input type="text" id="target-student-name" placeholder="Entrez le Nom de l'élève (Ex: Alpha)" style="margin-bottom: 8px;">
+                <div class="bonus-grid">
+                    <button class="btn-bonus-opt" onclick="giveBonusToTarget(150)">+150 PTS</button>
+                    <button class="btn-bonus-opt" onclick="giveBonusToTarget(200)">+200 PTS</button>
+                    <button class="btn-bonus-opt" onclick="giveBonusToTarget(250)">+250 PTS</button>
+                    <button class="btn-bonus-opt" onclick="giveBonusToTarget(400)">+400 PTS</button>
+                </div>
+            </div>
 
-            <h3>3. Ajouter un Match</h3>
+            <!-- Bonus pour Tout le Monde -->
+            <div class="bonus-box">
+                <label style="color: #ec4899; font-weight: bold;">🎉 Bonus pour TOUS les Élèves Validés :</label>
+                <div class="bonus-grid">
+                    <button class="btn-bonus-all" onclick="giveBonusToAll(150)">+150 à TOUS</button>
+                    <button class="btn-bonus-all" onclick="giveBonusToAll(200)">+200 à TOUS</button>
+                    <button class="btn-bonus-all" onclick="giveBonusToAll(250)">+250 à TOUS</button>
+                    <button class="btn-bonus-all" onclick="giveBonusToAll(400)">+400 à TOUS</button>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 25px;">3. Clôturer un Match & Valider les Gains</h3>
+            <div id="admin-matches-list" style="margin-bottom: 20px;"></div>
+
+            <h3>4. Ajouter un Match</h3>
             <form onsubmit="addMatch(event)">
                 <label>Équipe A</label>
                 <input type="text" id="m-team-a" required placeholder="Ex: Terminale A">
@@ -145,9 +175,12 @@
         var db = JSON.parse(localStorage.getItem('interclass_data')) || {
             users: [],
             matches: [
-                { id: 1, teamA: "Terminale A", teamB: "Première D", status: "open" }
-            ]
+                { id: 1, teamA: "TleA", teamB: "TleB", status: "open" }
+            ],
+            bets: []
         };
+
+        if (!db.bets) db.bets = [];
 
         function saveData() {
             localStorage.setItem('interclass_data', JSON.stringify(db));
@@ -184,9 +217,16 @@
 
         function registerStudent(e) {
             e.preventDefault();
-            var name = document.getElementById('s-name').value;
+            var name = document.getElementById('s-name').value.trim();
             var method = document.getElementById('s-method').value;
-            var phone = document.getElementById('s-phone').value;
+            var phone = document.getElementById('s-phone').value.trim();
+
+            var existingUser = db.users.find(u => u.name.toLowerCase() === name.toLowerCase() || u.phone === phone);
+            
+            if (existingUser) {
+                alert("Un compte avec ce nom ou ce numéro existe déjà !");
+                return;
+            }
 
             var newId = Date.now();
             var newUser = { id: newId, name: name, method: method, phone: phone, points: 0, status: 'pending' };
@@ -206,23 +246,90 @@
                 return;
             }
 
+            var match = db.matches.find(m => m.id === matchId);
+            if (!match || match.status !== 'open') {
+                alert("Ce match n'est plus ouvert aux paris.");
+                return;
+            }
+
+            var existingBet = db.bets.find(b => b.userId == currentUser.id && b.matchId == matchId);
+            if (existingBet) {
+                alert("Vous avez déjà placé un pari sur ce match !");
+                return;
+            }
+
+            if (currentUser.points < 100) {
+                alert("Solde insuffisant ! Un pari coûte 100 PTS.");
+                return;
+            }
+
+            currentUser.points -= 100;
+
             var labelOption = chosenOption === 'Nul' ? 'Match Nul' : chosenOption;
-            var amount = prompt("Combien de points voulez-vous miser sur [" + labelOption + "] ? (Solde actuel : " + currentUser.points + " PTS)");
-            amount = parseInt(amount);
+            db.bets.push({
+                id: Date.now(),
+                userId: currentUser.id,
+                matchId: matchId,
+                prediction: chosenOption
+            });
 
-            if (isNaN(amount) || amount <= 0) {
-                alert("Montant invalide.");
-                return;
-            }
-
-            if (amount > currentUser.points) {
-                alert("Solde insuffisant !");
-                return;
-            }
-
-            currentUser.points -= amount;
             saveData();
-            alert("Pari enregistré de " + amount + " PTS sur " + labelOption + " !");
+            alert("Pari de 100 PTS enregistré sur [" + labelOption + "] ! Si vous gagnez, vous empocherez +200 PTS au total (Gain net 100 PTS).");
+        }
+
+        function giveBonusToTarget(points) {
+            var targetName = document.getElementById('target-student-name').value.trim();
+            if (!targetName) {
+                alert("Veuillez d'abord écrire le NOM de l'élève !");
+                return;
+            }
+
+            var user = db.users.find(u => u.name.toLowerCase() === targetName.toLowerCase());
+            if (!user) {
+                alert("Aucun élève trouvé au nom de '" + targetName + "'. Vérifiez l'orthographe.");
+                return;
+            }
+
+            user.points += points;
+            saveData();
+            alert("🎯 +" + points + " PTS ajoutés avec succès à " + user.name + " !");
+            document.getElementById('target-student-name').value = "";
+            renderAdmin();
+        }
+
+        function giveBonusToAll(points) {
+            var confirmedUsers = db.users.filter(u => u.status === 'confirmed');
+            if (confirmedUsers.length === 0) {
+                alert("Aucun élève validé pour l'instant.");
+                return;
+            }
+
+            if (confirm("Voulez-vous donner +" + points + " PTS à TOUS les " + confirmedUsers.length + " élèves validés ?")) {
+                confirmedUsers.forEach(u => u.points += points);
+                saveData();
+                alert("🎉 +" + points + " PTS attribués à TOUS les élèves validés !");
+                renderAdmin();
+            }
+        }
+
+        function resolveMatch(matchId, winningOption) {
+            var match = db.matches.find(m => m.id === matchId);
+            if (!match) return;
+
+            match.status = 'closed';
+            match.winner = winningOption;
+
+            var winningBets = db.bets.filter(b => b.matchId == matchId && b.prediction === winningOption);
+            winningBets.forEach(b => {
+                var u = db.users.find(x => x.id == b.userId);
+                if (u) {
+                    u.points += 200;
+                }
+            });
+
+            saveData();
+            alert("Match clôturé ! Résultat : " + winningOption + ". " + winningBets.length + " pari(s) gagnant(s) crédité(s) de +200 PTS.");
+            renderAdmin();
         }
 
         function addMatch(e) {
@@ -243,21 +350,6 @@
             alert("Match créé avec succès !");
         }
 
-        function addBonusPoints(userId) {
-            var amount = prompt("Nombre de points bonus à ajouter :");
-            amount = parseInt(amount);
-
-            if (!isNaN(amount) && amount > 0) {
-                var user = db.users.find(u => u.id === userId);
-                if (user) {
-                    user.points += amount;
-                    saveData();
-                    alert(amount + " PTS bonus attribués à " + user.name + " !");
-                    renderAdmin();
-                }
-            }
-        }
-
         function renderAll() {
             var currentUser = db.users.find(u => u.id == currentUserId);
             if (currentUser) {
@@ -273,24 +365,30 @@
                 }
             }
 
-            // Affichage des matchs (avec bouton NUL)
+            // Affichage des matchs
             var matchesContainer = document.getElementById('matches-list');
             matchesContainer.innerHTML = "";
-            db.matches.forEach(m => {
-                var item = document.createElement('div');
-                item.className = 'item-row';
-                item.innerHTML = `
-                    <div>
-                        <strong>${m.teamA} vs ${m.teamB}</strong>
-                    </div>
-                    <div>
-                        <button class="btn-action" onclick="placeBet(${m.id}, '${m.teamA}')">${m.teamA}</button>
-                        <button class="btn-action btn-null" onclick="placeBet(${m.id}, 'Nul')">Nul</button>
-                        <button class="btn-action btn-team-b" onclick="placeBet(${m.id}, '${m.teamB}')">${m.teamB}</button>
-                    </div>
-                `;
-                matchesContainer.appendChild(item);
-            });
+            var openMatches = db.matches.filter(m => m.status === 'open');
+
+            if (openMatches.length === 0) {
+                matchesContainer.innerHTML = "<p style='color: #64748b;'>Aucun match ouvert aux paris pour le moment.</p>";
+            } else {
+                openMatches.forEach(m => {
+                    var item = document.createElement('div');
+                    item.className = 'item-row';
+                    item.innerHTML = `
+                        <div>
+                            <strong>${m.teamA} vs ${m.teamB}</strong>
+                        </div>
+                        <div>
+                            <button class="btn-action" onclick="placeBet(${m.id}, '${m.teamA}')">${m.teamA}</button>
+                            <button class="btn-action btn-null" onclick="placeBet(${m.id}, 'Nul')">Nul</button>
+                            <button class="btn-action btn-team-b" onclick="placeBet(${m.id}, '${m.teamB}')">${m.teamB}</button>
+                        </div>
+                    `;
+                    matchesContainer.appendChild(item);
+                });
+            }
 
             // Cagnotte & Classement
             var confirmedUsers = db.users.filter(u => u.status === 'confirmed');
@@ -339,59 +437,4 @@
 
             if (pendingUsers.length === 0) {
                 container.innerHTML = "<p style='color: #64748b;'>Aucune demande en attente.</p>";
-            } else {
-                pendingUsers.forEach(u => {
-                    var row = document.createElement('div');
-                    row.className = 'item-row';
-                    row.innerHTML = `<div><strong>${u.name}</strong><br><small style="color:#94a3b8">${u.method} - ${u.phone}</small></div>`;
-                    
-                    var btn = document.createElement('button');
-                    btn.className = 'btn-action';
-                    btn.innerText = 'Valider (2000 PTS)';
-                    btn.onclick = function() { validateUser(u.id); };
-
-                    row.appendChild(btn);
-                    container.appendChild(row);
-                });
-            }
-
-            // Liste des membres validés pour ajout de Bonus
-            var usersContainer = document.getElementById('admin-users-list');
-            usersContainer.innerHTML = "";
-            var confirmedUsers = db.users.filter(u => u.status === 'confirmed');
-
-            if (confirmedUsers.length === 0) {
-                usersContainer.innerHTML = "<p style='color: #64748b;'>Aucun élève validé pour l'instant.</p>";
-            } else {
-                confirmedUsers.forEach(u => {
-                    var row = document.createElement('div');
-                    row.className = 'item-row';
-                    row.innerHTML = `
-                        <div>
-                            <strong>${u.name}</strong><br>
-                            <small style="color:#10b981">${u.points} PTS actuels</small>
-                        </div>
-                        <button class="btn-bonus" onclick="addBonusPoints(${u.id})">+ Bonus Week-end</button>
-                    `;
-                    usersContainer.appendChild(row);
-                });
-            }
-        }
-
-        function validateUser(id) {
-            var u = db.users.find(x => x.id === id);
-            if (u) {
-                u.status = 'confirmed';
-                u.points = 2000;
-                saveData();
-                alert("Compte validé avec 2000 Points !");
-                renderAdmin();
-            }
-        }
-
-        // Chargement initial
-        renderAll();
-    </script>
-</body>
-            </html>
-    
+      
