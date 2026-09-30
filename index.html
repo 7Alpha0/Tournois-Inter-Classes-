@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InterClass - Tournoi & Pronostics</title>
+    <title>InterClass - Tournoi & Pronostics Pro</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 15px; }
@@ -18,17 +18,23 @@
         .card { background-color: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #334155; }
         h2, h3 { color: #fbbf24; margin-bottom: 10px; }
         
-        input, select { width: 100%; padding: 10px; margin: 8px 0 15px 0; background-color: #0f172a; border: 1px solid #475569; color: white; border-radius: 8px; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0 15px 0; background-color: #0f172a; border: 1px solid #475569; color: white; border-radius: 8px; }
         
         .btn-submit { width: 100%; padding: 12px; background-color: #f59e0b; color: #0f172a; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .btn-action { padding: 6px 10px; background-color: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-left: 2px; }
         .btn-null { background-color: #64748b; }
         .btn-team-b { background-color: #3b82f6; }
-        
+        .btn-danger { background-color: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn-warn { background-color: #f59e0b; color: #0f172a; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .btn-reset { background-color: #ef4444; color: white; padding: 10px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-top: 15px; width: 100%; }
+
         .bonus-box { background-color: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
         .bonus-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
         .btn-bonus-opt { padding: 8px 12px; background-color: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; flex: 1; min-width: 70px; }
         .btn-bonus-all { padding: 8px 12px; background-color: #ec4899; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; flex: 1; min-width: 70px; }
+
+        .notif-box { background-color: #1e1b4b; border: 1px solid #6366f1; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+        .notif-item { background-color: #0f172a; border-left: 4px solid #6366f1; padding: 8px 12px; margin-top: 8px; border-radius: 4px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
 
         .hidden { display: none !important; }
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #0f172a; border-radius: 8px; margin-bottom: 8px; border: 1px solid #334155; flex-wrap: wrap; gap: 10px; }
@@ -42,12 +48,13 @@
         .r-2 { background-color: #94a3b8; color: #0f172a; }
         .r-3 { background-color: #b45309; color: white; }
         .r-4 { background-color: #3b82f6; color: white; }
+        .badge-blocked { background-color: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">🏆 InterClass</div>
+        <div class="logo">🏆 InterClass 1xBet Style</div>
         <div class="nav-btns">
             <button class="btn-student" onclick="showSection('student')">Élève</button>
             <button class="btn-admin" id="admin-nav-btn" onclick="openAdminPortal()">Admin</button>
@@ -56,7 +63,11 @@
 
     <!-- SECTION ELEVE -->
     <section id="sec-student">
-        <!-- Inscription -->
+        <div id="student-notif-card" class="notif-box hidden">
+            <h4 style="color: #818cf8; margin-bottom: 5px;">📢 Annonces & Notifications</h4>
+            <div id="student-notif-list"></div>
+        </div>
+
         <div id="form-card" class="card">
             <h2>Rejoindre le Tournoi InterClass</h2>
             <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">
@@ -81,23 +92,18 @@
             </form>
         </div>
 
-        <!-- Tableau de bord Élève -->
         <div id="dash-card" class="card hidden">
             <h3 id="user-display-name">Élève</h3>
             <p id="user-status" style="color: #f59e0b; font-size: 0.9rem; margin-bottom: 10px;">Statut : En attente de validation Admin</p>
             <p>Solde Points : <strong id="user-points" style="color: #10b981; font-size: 1.3rem;">0</strong> PTS</p>
         </div>
 
-        <!-- Zone des Paris -->
         <div id="bets-card" class="card hidden">
             <h3>⚽ Parier sur un Match (Coût : 100 PTS)</h3>
             <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">En cas de gain, vous gagnez un solde net de +100 PTS (+200 PTS crédités au total).</p>
-            <div id="matches-list">
-                <!-- Matchs affichés dynamiquement -->
-            </div>
+            <div id="matches-list"></div>
         </div>
 
-        <!-- Classement Général & Gains -->
         <div class="card">
             <h3>📊 Classement Général & Répartition des Prix</h3>
             <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">
@@ -112,9 +118,7 @@
                         <th>Gain Estimé</th>
                     </tr>
                 </thead>
-                <tbody id="leaderboard-body">
-                    <!-- Classement affiché dynamiquement -->
-                </tbody>
+                <tbody id="leaderboard-body"></tbody>
             </table>
         </div>
     </section>
@@ -122,17 +126,25 @@
     <!-- SECTION ADMIN -->
     <section id="sec-admin" class="hidden">
         <div class="card">
-            <h2>Panneau Administration</h2>
+            <h2>⚙️ Panneau d'Administration Avancé</h2>
             
+            <h3>📢 Annonce Globale</h3>
+            <form onsubmit="sendNotification(event)">
+                <textarea id="notif-text" rows="2" required placeholder="Ex: Les paris pour le match TleA vs TleB sont ouverts !"></textarea>
+                <button type="submit" class="btn-submit" style="background-color: #6366f1; color: white;">Envoyer l'Annonce</button>
+            </form>
+            <div id="admin-notif-list" style="margin-top: 10px; margin-bottom: 25px;"></div>
+
             <h3>1. Demandes d'accès en attente</h3>
             <div id="admin-requests" style="margin-bottom: 20px;"></div>
 
-            <h3>2. Distribution de Bonus Express</h3>
-            
-            <!-- Bonus pour Personne Ciblée -->
+            <h3>2. Gestion des Utilisateurs (Bannissement & Modération)</h3>
+            <div id="admin-users-list" style="margin-bottom: 20px;"></div>
+
+            <h3>3. Bonus Express</h3>
             <div class="bonus-box">
                 <label style="color: #8b5cf6; font-weight: bold;">🎯 Bonus pour UNE Personne Ciblée :</label>
-                <input type="text" id="target-student-name" placeholder="Entrez le Nom de l'élève (Ex: Alpha)" style="margin-bottom: 8px;">
+                <input type="text" id="target-student-name" placeholder="Entrez le Nom exact de l'élève" style="margin-bottom: 8px;">
                 <div class="bonus-grid">
                     <button class="btn-bonus-opt" onclick="giveBonusToTarget(150)">+150 PTS</button>
                     <button class="btn-bonus-opt" onclick="giveBonusToTarget(200)">+200 PTS</button>
@@ -141,7 +153,6 @@
                 </div>
             </div>
 
-            <!-- Bonus pour Tout le Monde -->
             <div class="bonus-box">
                 <label style="color: #ec4899; font-weight: bold;">🎉 Bonus pour TOUS les Élèves Validés :</label>
                 <div class="bonus-grid">
@@ -152,10 +163,10 @@
                 </div>
             </div>
 
-            <h3 style="margin-top: 25px;">3. Clôturer un Match & Valider les Gains</h3>
+            <h3 style="margin-top: 25px;">4. Gestion & Résolution des Matchs</h3>
             <div id="admin-matches-list" style="margin-bottom: 20px;"></div>
 
-            <h3>4. Ajouter un Match</h3>
+            <h3>5. Créer un Nouveau Match</h3>
             <form onsubmit="addMatch(event)">
                 <label>Équipe A</label>
                 <input type="text" id="m-team-a" required placeholder="Ex: Terminale A">
@@ -165,6 +176,8 @@
 
                 <button type="submit" class="btn-submit">Créer le Match</button>
             </form>
+
+            <button class="btn-reset" onclick="resetSystemData()">⚠️ Réinitialiser TOUTES les Données</button>
         </div>
     </section>
 
@@ -172,15 +185,28 @@
         var isAdminUnlocked = false;
         var currentUserId = localStorage.getItem('current_user_id');
 
-        var db = JSON.parse(localStorage.getItem('interclass_data')) || {
-            users: [],
-            matches: [
-                { id: 1, teamA: "TleA", teamB: "TleB", status: "open" }
-            ],
-            bets: []
-        };
+        function loadDatabase() {
+            var defaultDb = {
+                users: [],
+                matches: [{ id: 1, teamA: "TleA", teamB: "TleB", status: "open" }],
+                bets: [],
+                notifications: []
+            };
+            try {
+                var stored = localStorage.getItem('interclass_data');
+                if (!stored) return defaultDb;
+                var parsed = JSON.parse(stored);
+                if (!parsed.users) parsed.users = [];
+                if (!parsed.matches) parsed.matches = [];
+                if (!parsed.bets) parsed.bets = [];
+                if (!parsed.notifications) parsed.notifications = [];
+                return parsed;
+            } catch (e) {
+                return defaultDb;
+            }
+        }
 
-        if (!db.bets) db.bets = [];
+        var db = loadDatabase();
 
         function saveData() {
             localStorage.setItem('interclass_data', JSON.stringify(db));
@@ -215,13 +241,38 @@
             }
         }
 
+        function sendNotification(e) {
+            e.preventDefault();
+            var text = document.getElementById('notif-text').value.trim();
+            if (!text) return;
+
+            db.notifications.unshift({
+                id: Date.now(),
+                text: text,
+                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+
+            document.getElementById('notif-text').value = "";
+            saveData();
+            alert("Notification envoyée à tous les utilisateurs !");
+            renderAdmin();
+        }
+
+        function deleteNotification(id) {
+            db.notifications = db.notifications.filter(function(n) { return n.id !== id; });
+            saveData();
+            renderAdmin();
+        }
+
         function registerStudent(e) {
             e.preventDefault();
             var name = document.getElementById('s-name').value.trim();
             var method = document.getElementById('s-method').value;
             var phone = document.getElementById('s-phone').value.trim();
 
-            var existingUser = db.users.find(u => u.name.toLowerCase() === name.toLowerCase() || u.phone === phone);
+            var existingUser = db.users.find(function(u) {
+                return u.name.toLowerCase() === name.toLowerCase() || u.phone === phone;
+            });
             
             if (existingUser) {
                 alert("Un compte avec ce nom ou ce numéro existe déjà !");
@@ -229,7 +280,7 @@
             }
 
             var newId = Date.now();
-            var newUser = { id: newId, name: name, method: method, phone: phone, points: 0, status: 'pending' };
+            var newUser = { id: newId, name: name, method: method, phone: phone, points: 0, status: 'pending', isBlocked: false };
             db.users.push(newUser);
             
             currentUserId = newId;
@@ -240,19 +291,24 @@
         }
 
         function placeBet(matchId, chosenOption) {
-            var currentUser = db.users.find(u => u.id == currentUserId);
+            var currentUser = db.users.find(function(u) { return u.id == currentUserId; });
             if (!currentUser || currentUser.status !== 'confirmed') {
                 alert("Votre compte doit être validé par l'Admin pour parier.");
                 return;
             }
 
-            var match = db.matches.find(m => m.id === matchId);
+            if (currentUser.isBlocked) {
+                alert("🚫 Vos droits de pari ont été suspendus par l'administrateur.");
+                return;
+            }
+
+            var match = db.matches.find(function(m) { return m.id === matchId; });
             if (!match || match.status !== 'open') {
                 alert("Ce match n'est plus ouvert aux paris.");
                 return;
             }
 
-            var existingBet = db.bets.find(b => b.userId == currentUser.id && b.matchId == matchId);
+            var existingBet = db.bets.find(function(b) { return b.userId == currentUser.id && b.matchId == matchId; });
             if (existingBet) {
                 alert("Vous avez déjà placé un pari sur ce match !");
                 return;
@@ -274,68 +330,122 @@
             });
 
             saveData();
-            alert("Pari de 100 PTS enregistré sur [" + labelOption + "] ! Si vous gagnez, vous empocherez +200 PTS au total (Gain net 100 PTS).");
+            alert("Pari de 100 PTS enregistré sur [" + labelOption + "] !");
         }
 
         function giveBonusToTarget(points) {
             var targetName = document.getElementById('target-student-name').value.trim();
             if (!targetName) {
-                alert("Veuillez d'abord écrire le NOM de l'élève !");
+                alert("Veuillez saisir le nom de l'élève !");
                 return;
             }
 
-            var user = db.users.find(u => u.name.toLowerCase() === targetName.toLowerCase());
+            var user = db.users.find(function(u) { return u.name.toLowerCase() === targetName.toLowerCase(); });
             if (!user) {
-                alert("Aucun élève trouvé au nom de '" + targetName + "'. Vérifiez l'orthographe.");
+                alert("Aucun élève trouvé avec le nom '" + targetName + "'.");
                 return;
             }
 
             user.points += points;
             saveData();
-            alert("🎯 +" + points + " PTS ajoutés avec succès à " + user.name + " !");
+            alert("🎯 +" + points + " PTS ajoutés à " + user.name + " !");
             document.getElementById('target-student-name').value = "";
             renderAdmin();
         }
 
         function giveBonusToAll(points) {
-            var confirmedUsers = db.users.filter(u => u.status === 'confirmed');
+            var confirmedUsers = db.users.filter(function(u) { return u.status === 'confirmed'; });
             if (confirmedUsers.length === 0) {
-                alert("Aucun élève validé pour l'instant.");
+                alert("Aucun élève validé pour le moment.");
                 return;
             }
 
-            if (confirm("Voulez-vous donner +" + points + " PTS à TOUS les " + confirmedUsers.length + " élèves validés ?")) {
-                confirmedUsers.forEach(u => u.points += points);
+            if (confirm("Donner +" + points + " PTS à TOUS les " + confirmedUsers.length + " élèves validés ?")) {
+                confirmedUsers.forEach(function(u) { u.points += points; });
                 saveData();
-                alert("🎉 +" + points + " PTS attribués à TOUS les élèves validés !");
+                alert("🎉 +" + points + " PTS distribués à tous !");
                 renderAdmin();
             }
         }
 
         function resolveMatch(matchId, winningOption) {
-            var match = db.matches.find(m => m.id === matchId);
+            var match = db.matches.find(function(m) { return m.id === matchId; });
             if (!match) return;
 
             match.status = 'closed';
             match.winner = winningOption;
 
-            var winningBets = db.bets.filter(b => b.matchId == matchId && b.prediction === winningOption);
-            winningBets.forEach(b => {
-                var u = db.users.find(x => x.id == b.userId);
-                if (u) {
-                    u.points += 200;
-                }
+            var winningBets = db.bets.filter(function(b) { return b.matchId == matchId && b.prediction === winningOption; });
+            winningBets.forEach(function(b) {
+                var u = db.users.find(function(x) { return x.id == b.userId; });
+                if (u) u.points += 200;
             });
 
             saveData();
-            alert("Match clôturé ! Résultat : " + winningOption + ". " + winningBets.length + " pari(s) gagnant(s) crédité(s) de +200 PTS.");
+            alert("Match clôturé ! " + winningBets.length + " gagnant(s) crédité(s) de +200 PTS.");
             renderAdmin();
+        }
+
+        function cancelMatch(matchId) {
+            if (!confirm("Voulez-vous annuler ce match et rembourser tous les parieurs (100 PTS chacun) ?")) return;
+            
+            var match = db.matches.find(function(m) { return m.id === matchId; });
+            if (!match) return;
+
+            var matchBets = db.bets.filter(function(b) { return b.matchId == matchId; });
+            matchBets.forEach(function(b) {
+                var u = db.users.find(function(x) { return x.id == b.userId; });
+                if (u) u.points += 100; // Remboursement
+            });
+
+            db.matches = db.matches.filter(function(m) { return m.id !== matchId; });
+            db.bets = db.bets.filter(function(b) { return b.matchId !== matchId; });
+
+            saveData();
+            alert("Match annulé et paris remboursés !");
+            renderAdmin();
+        }
+
+        function toggleUserBlock(userId) {
+            var u = db.users.find(function(x) { return x.id === userId; });
+            if (u) {
+                u.isBlocked = !u.isBlocked;
+                saveData();
+                alert(u.name + (u.isBlocked ? " a été bloqué pour les paris." : " a été débloqué."));
+                renderAdmin();
+            }
+        }
+
+        function deleteUser(userId) {
+            var u = db.users.find(function(x) { return x.id === userId; });
+            if (u && confirm("Êtes-vous sûr de vouloir supprimer définitivement le compte de " + u.name + " ?")) {
+                db.users = db.users.filter(function(x) { return x.id !== userId; });
+                db.bets = db.bets.filter(function(b) { return b.userId !== userId; });
+                saveData();
+                alert("Compte supprimé.");
+         renderAdmin();
+            }
+        }
+
+        function editUserPoints(userId) {
+            var u = db.users.find(function(x) { return x.id === userId; });
+            if (u) {
+                var newPts = prompt("Saisissez le nouveau montant exact de points pour " + u.name + " :", u.points);
+                if (newPts !== null && !isNaN(parseInt(newPts))) {
+                    u.points = parseInt(newPts);
+                    saveData();
+                    alert("Nouveau solde de " + u.name + " : " + u.points + " PTS.");
+                    renderAdmin();
+                }
+            }
         }
 
         function addMatch(e) {
             e.preventDefault();
-            var teamA = document.getElementById('m-team-a').value;
-            var teamB = document.getElementById('m-team-b').value;
+            var teamA = document.getElementById('m-team-a').value.trim();
+            var teamB = document.getElementById('m-team-b').value.trim();
+
+            if (!teamA || !teamB) return;
 
             db.matches.push({
                 id: Date.now(),
@@ -348,10 +458,45 @@
             document.getElementById('m-team-b').value = "";
             saveData();
             alert("Match créé avec succès !");
+            renderAdmin();
+        }
+
+        function validateUser(id) {
+            var u = db.users.find(function(x) { return x.id === id; });
+            if (u) {
+                u.status = 'confirmed';
+                u.points = 2000;
+                saveData();
+                alert("Compte validé avec 2000 Points !");
+                renderAdmin();
+            }
+        }
+
+        function resetSystemData() {
+            if (confirm("⚠️ Voulez-vous TOUT réinitialiser ? Toutes les données d'élèves et de matchs seront effacées.")) {
+                localStorage.removeItem('interclass_data');
+                localStorage.removeItem('current_user_id');
+                location.reload();
+            }
         }
 
         function renderAll() {
-            var currentUser = db.users.find(u => u.id == currentUserId);
+            var notifCard = document.getElementById('student-notif-card');
+            var notifList = document.getElementById('student-notif-list');
+            if (db.notifications && db.notifications.length > 0) {
+                notifCard.classList.remove('hidden');
+                notifList.innerHTML = "";
+                db.notifications.forEach(function(n) {
+                    var item = document.createElement('div');
+                    item.className = 'notif-item';
+                    item.innerHTML = '<span>' + n.text + '</span> <small style="color:#a5b4fc; margin-left:8px;">' + n.date + '</small>';
+                    notifList.appendChild(item);
+                });
+            } else {
+                notifCard.classList.add('hidden');
+            }
+
+            var currentUser = db.users.find(function(u) { return u.id == currentUserId; });
             if (currentUser) {
                 document.getElementById('form-card').classList.add('hidden');
                 document.getElementById('dash-card').classList.remove('hidden');
@@ -359,81 +504,77 @@
                 document.getElementById('user-points').innerText = currentUser.points;
 
                 if (currentUser.status === 'confirmed') {
-                    document.getElementById('user-status').innerText = "Statut : Compte Validé ✅";
-                    document.getElementById('user-status').style.color = "#10b981";
+                    document.getElementById('user-status').innerText = currentUser.isBlocked ? "Statut : Compte Suspendu 🚫" : "Statut : Compte Validé ✅";
+                    document.getElementById('user-status').style.color = currentUser.isBlocked ? "#ef4444" : "#10b981";
                     document.getElementById('bets-card').classList.remove('hidden');
                 }
             }
 
-            // Affichage des matchs
             var matchesContainer = document.getElementById('matches-list');
             matchesContainer.innerHTML = "";
-            var openMatches = db.matches.filter(m => m.status === 'open');
+            var openMatches = db.matches.filter(function(m) { return m.status === 'open'; });
 
             if (openMatches.length === 0) {
                 matchesContainer.innerHTML = "<p style='color: #64748b;'>Aucun match ouvert aux paris pour le moment.</p>";
             } else {
-                openMatches.forEach(m => {
+                openMatches.forEach(function(m) {
                     var item = document.createElement('div');
                     item.className = 'item-row';
-                    item.innerHTML = `
-                        <div>
-                            <strong>${m.teamA} vs ${m.teamB}</strong>
-                        </div>
-                        <div>
-                            <button class="btn-action" onclick="placeBet(${m.id}, '${m.teamA}')">${m.teamA}</button>
-                            <button class="btn-action btn-null" onclick="placeBet(${m.id}, 'Nul')">Nul</button>
-                            <button class="btn-action btn-team-b" onclick="placeBet(${m.id}, '${m.teamB}')">${m.teamB}</button>
-                        </div>
-                    `;
+                    item.innerHTML = '<div><strong>' + m.teamA + ' vs ' + m.teamB + '</strong></div>' +
+                        '<div>' +
+                            '<button class="btn-action" onclick="placeBet(' + m.id + ', \'' + m.teamA + '\')">' + m.teamA + '</button> ' +
+                            '<button class="btn-action btn-null" onclick="placeBet(' + m.id + ', \'Nul\')">Nul</button> ' +
+                            '<button class="btn-action btn-team-b" onclick="placeBet(' + m.id + ', \'' + m.teamB + '\')">' + m.teamB + '</button>' +
+                        '</div>';
                     matchesContainer.appendChild(item);
                 });
             }
 
-            // Cagnotte & Classement
-            var confirmedUsers = db.users.filter(u => u.status === 'confirmed');
+            var confirmedUsers = db.users.filter(function(u) { return u.status === 'confirmed'; });
             var totalPotFCFA = confirmedUsers.length * 500;
             document.getElementById('total-pot').innerText = totalPotFCFA + " FCFA";
 
             var leaderboard = document.getElementById('leaderboard-body');
             leaderboard.innerHTML = "";
-            var sortedUsers = [...db.users].sort((a, b) => b.points - a.points);
+            var sortedUsers = db.users.slice().sort(function(a, b) { return b.points - a.points; });
             
-            sortedUsers.forEach((u, index) => {
+            sortedUsers.forEach(function(u, index) {
                 var row = document.createElement('tr');
                 var rank = index + 1;
                 var rewardText = "-";
                 var badgeClass = "";
 
-                if (rank === 1) {
-                    rewardText = Math.round(totalPotFCFA * 0.20) + " FCFA (20%)";
-                    badgeClass = "reward-badge r-1";
-                } else if (rank === 2) {
-                    rewardText = Math.round(totalPotFCFA * 0.15) + " FCFA (15%)";
-                    badgeClass = "reward-badge r-2";
-                } else if (rank === 3) {
-                    rewardText = Math.round(totalPotFCFA * 0.10) + " FCFA (10%)";
-                    badgeClass = "reward-badge r-3";
-                } else if (rank === 4) {
-                    rewardText = Math.round(totalPotFCFA * 0.05) + " FCFA (5%)";
-                    badgeClass = "reward-badge r-4";
-                }
+                if (rank === 1) { rewardText = Math.round(totalPotFCFA * 0.20) + " FCFA (20%)"; badgeClass = "reward-badge r-1"; }
+                else if (rank === 2) { rewardText = Math.round(totalPotFCFA * 0.15) + " FCFA (15%)"; badgeClass = "reward-badge r-2"; }
+                else if (rank === 3) { rewardText = Math.round(totalPotFCFA * 0.10) + " FCFA (10%)"; badgeClass = "reward-badge r-3"; }
+                else if (rank === 4) { rewardText = Math.round(totalPotFCFA * 0.05) + " FCFA (5%)"; badgeClass = "reward-badge r-4"; }
 
-                row.innerHTML = `
-                    <td><strong>#${rank}</strong></td>
-                    <td>${u.name}</td>
-                    <td><strong>${u.points}</strong> PTS</td>
-                    <td><span class="${badgeClass}">${rewardText}</span></td>
-                `;
+                var statusBadge = u.isBlocked ? '<span class="badge-blocked">Bloqué</span>' : '';
+
+                row.innerHTML = '<td><strong>#' + rank + '</strong></td>' +
+                    '<td>' + u.name + statusBadge + '</td>' +
+                    '<td><strong>' + u.points + '</strong> PTS</td>' +
+                    '<td><span class="' + badgeClass + '">' + rewardText + '</span></td>';
                 leaderboard.appendChild(row);
             });
         }
 
         function renderAdmin() {
-            // Demandes en attente
+            var adminNotifList = document.getElementById('admin-notif-list');
+            adminNotifList.innerHTML = "";
+            if (db.notifications && db.notifications.length > 0) {
+                db.notifications.forEach(function(n) {
+                    var item = document.createElement('div');
+                    item.className = 'notif-item';
+                    item.innerHTML = '<span>' + n.text + ' <small style="color:#94a3b8;">(' + n.date + ')</small></span>' +
+                        '<button class="btn-danger" style="font-size:0.7rem;" onclick="deleteNotification(' + n.id + ')">Supprimer</button>';
+                    adminNotifList.appendChild(item);
+                });
+            }
+
             var container = document.getElementById('admin-requests');
             container.innerHTML = "";
-            var pendingUsers = db.users.filter(u => u.status === 'pending');
+            var pendingUsers = db.users.filter(function(u) { return u.status === 'pending'; });
 
             if (pendingUsers.length === 0) {
                 container.innerHTML = "<p style='color: #64748b;'>Aucune demande en attente.</p>";
@@ -453,6 +594,30 @@
                 });
             }
 
+            // Gestion complète des Utilisateurs Validés
+            var usersContainer = document.getElementById('admin-users-list');
+            usersContainer.innerHTML = "";
+            var confirmedUsers = db.users.filter(function(u) { return u.status === 'confirmed'; });
+
+            if (confirmedUsers.length === 0) {
+                usersContainer.innerHTML = "<p style='color: #64748b;'>Aucun membre validé.</p>";
+            } else {
+                confirmedUsers.forEach(function(u) {
+                    var row = document.createElement('div');
+                    row.className = 'item-row';
+                    var blockText = u.isBlocked ? "Débloquer" : "Bloquer";
+                    
+                    row.innerHTML = '<div><strong>' + u.name + '</strong> (' + u.points + ' PTS)<br><small style="color:#94a3b8">' + u.phone + '</small></div>' +
+                        '<div>' +
+                            '<button class="btn-action" onclick="editUserPoints(' + u.id + ')">✏️ Editer PTS</button> ' +
+                            '<button class="btn-warn" onclick="toggleUserBlock(' + u.id + ')">' + blockText + '</button> ' +
+                            '<button class="btn-danger" onclick="deleteUser(' + u.id + ')">❌ Kick</button>' +
+                        '</div>';
+                    usersContainer.appendChild(row);
+                });
+            }
+
+            // Gestion des Matchs
             var adminMatchesContainer = document.getElementById('admin-matches-list');
             adminMatchesContainer.innerHTML = "";
             var openMatches = db.matches.filter(function(m) { return m.status === 'open'; });
@@ -465,10 +630,11 @@
                     row.className = 'item-row';
                     row.innerHTML = '<div><strong>' + m.teamA + ' vs ' + m.teamB + '</strong></div>' +
                         '<div>' +
-                            '<small style="color:#94a3b8; margin-right:5px;">Gagnant :</small> ' +
+                            '<small style="color:#94a3b8; margin-right:5px;">Résultat :</small> ' +
                             '<button class="btn-action" onclick="resolveMatch(' + m.id + ', \'' + m.teamA + '\')">' + m.teamA + '</button> ' +
                             '<button class="btn-action btn-null" onclick="resolveMatch(' + m.id + ', \'Nul\')">Nul</button> ' +
-                            '<button class="btn-action btn-team-b" onclick="resolveMatch(' + m.id + ', \'' + m.teamB + '\')">' + m.teamB + '</button>' +
+                            '<button class="btn-action btn-team-b" onclick="resolveMatch(' + m.id + ', \'' + m.teamB + '\')">' + m.teamB + '</button> ' +
+                            '<button class="btn-danger" onclick="cancelMatch(' + m.id + ')">Annuler Match</button>' +
                         '</div>';
                     adminMatchesContainer.appendChild(row);
                 });
