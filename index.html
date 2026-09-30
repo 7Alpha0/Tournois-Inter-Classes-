@@ -1,338 +1,181 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InterClass - Tournoi & Paris</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        slate: { 850: '#111827', 900: '#0f172a', 950: '#020617' },
-                        amber: { 400: '#fbbf24', 500: '#f59e0b' }
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+    <title>InterClass - Tournoi & Pronostics</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #f3f4f6; }
-        .glass-card { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .glass-card-accent { background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(245, 158, 11, 0.2); }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #f8fafc; padding: 15px; }
+        
+        header { display: flex; justify-content: space-between; items-center; padding-bottom: 15px; border-b: 1px solid #334155; margin-bottom: 20px; }
+        .logo { font-size: 1.2rem; font-weight: bold; color: #fbbf24; }
+        
+        .nav-btns button { padding: 8px 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-left: 5px; }
+        .btn-student { background-color: #f59e0b; color: #0f172a; }
+        .btn-admin { background-color: #334155; color: #f8fafc; }
+
+        .card { background-color: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #334155; }
+        h2, h3 { color: #fbbf24; margin-bottom: 10px; }
+        
+        input, select { width: 100%; padding: 10px; margin: 8px 0 15px 0; background-color: #0f172a; border: 1px solid #475569; color: white; border-radius: 8px; }
+        
+        .btn-submit { width: 100%; padding: 12px; background-color: #f59e0b; color: #0f172a; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-action { padding: 8px 12px; background-color: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        .hidden { display: none !important; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #0f172a; border-radius: 8px; margin-bottom: 8px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased">
+<body>
 
-    <!-- En-tête / Sélecteur de Portail -->
-    <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchPortal('student')">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-950 font-black text-xl">
-                    <i class="fa-solid fa-trophy"></i>
-                </div>
-                <div>
-                    <span class="text-xl font-extrabold tracking-tight text-white">InterClass</span>
-                    <span class="block text-[10px] font-semibold text-amber-400 uppercase -mt-1">Tournoi & Pronostics</span>
-                </div>
-            </div>
-
-            <div class="flex items-center space-x-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
-                <button id="btn-portal-student" onclick="switchPortal('student')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-slate-950">
-                    <i class="fa-solid fa-user-graduate"></i> Élève
-                </button>
-                <button id="btn-portal-admin" onclick="switchPortal('admin')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-user-shield"></i> Admin
-                </button>
-            </div>
+    <header>
+        <div class="logo">🏆 InterClass</div>
+        <div class="nav-btns">
+            <button class="btn-student" onclick="showSection('student')">Élève</button>
+            <button class="btn-admin" id="admin-nav-btn" onclick="openAdminPortal()">Admin</button>
         </div>
     </header>
 
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2"></div>
-
-        <!-- PORTAIL ÉLÈVE -->
-        <section id="portal-student" class="space-y-6">
-            <div id="student-auth-card" class="glass-card rounded-2xl p-6 max-w-xl mx-auto text-center space-y-4">
-                <h2 class="text-2xl font-extrabold text-white">Rejoindre le Tournoi InterClass</h2>
-                <p class="text-slate-300 text-xs">Inscrivez-vous et réglez vos frais d'accès de <strong class="text-amber-400">500 FCFA</strong>. Après validation Admin, vous recevrez <strong class="text-emerald-400">2 000 Points</strong> pour parier !</p>
+    <!-- SECTION ELEVE -->
+    <section id="sec-student">
+        <div id="form-card" class="card">
+            <h2>Rejoindre le Tournoi InterClass</h2>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">
+                Inscrivez-vous et réglez vos frais d'accès de <strong>500 FCFA</strong>. Après validation, vous recevrez <strong>2 000 Points</strong> pour parier !
+            </p>
+            <form onsubmit="registerStudent(event)">
+                <label>Nom Complet</label>
+                <input type="text" id="s-name" required placeholder="Ex: Jean Koffi">
                 
-                <form id="student-reg-form" onsubmit="handleStudentRegistration(event)" class="space-y-3 text-left pt-2">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Nom Complet</label>
-                        <input type="text" id="reg-fullname" required placeholder="Ex: Jean Koffi" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Mode de Paiement (500 FCFA)</label>
-                        <select id="reg-method" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
-                            <option value="TMoney">TMoney</option>
-                            <option value="Moov Money">Moov Money</option>
-                            <option value="Flooz">Flooz</option>
-                            <option value="Wave">Wave</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Numéro de Téléphone</label>
-                        <input type="tel" id="reg-phone" required placeholder="Ex: 90 12 34 56" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white">
-                    </div>
-                    <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider transition-all">
-                        <i class="fa-solid fa-paper-plane mr-1"></i> J'ai effectué le transfert (500 FCFA)
-                    </button>
-                </form>
-            </div>
+                <label>Mode de Paiement (500 FCFA)</label>
+                <select id="s-method">
+                    <option value="TMoney">TMoney</option>
+                    <option value="Moov Money">Moov Money</option>
+                    <option value="Flooz">Flooz</option>
+                    <option value="Wave">Wave</option>
+                </select>
 
-            <div id="student-dashboard" class="hidden space-y-6">
-                <div class="glass-card rounded-2xl p-4 flex justify-between items-center">
-                    <div>
-                        <h3 id="student-name-display" class="font-bold text-white text-base">Élève</h3>
-                        <span id="student-status-badge" class="text-xs text-amber-400 font-semibold">En attente de validation</span>
-                    </div>
-                    <div class="bg-slate-900 px-4 py-2 rounded-xl border border-slate-800">
-                        <span class="text-[10px] text-slate-400 uppercase block">Solde Points</span>
-                        <span id="student-points-display" class="text-xl font-black text-amber-400">0</span> <span class="text-xs text-slate-400">PTS</span>
-                    </div>
-                </div>
+                <label>Numéro de Téléphone</label>
+                <input type="tel" id="s-phone" required placeholder="Ex: 90 12 34 56">
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="md:col-span-2 space-y-4">
-                        <h3 class="text-base font-bold text-white flex items-center space-x-2">
-                            <i class="fa-solid fa-futbol text-emerald-400"></i> 
-                            <span>Matchs & Pronostics (-100 PTS par pari)</span>
-                        </h3>
-                        <div id="student-matches-container" class="space-y-3"></div>
-                    </div>
+                <button type="submit" class="btn-submit">J'ai effectué le transfert (500 FCFA)</button>
+            </form>
+        </div>
 
-                    <div class="space-y-4">
-                        <div class="glass-card-accent rounded-2xl p-4 space-y-2">
-                            <h4 class="font-bold text-xs uppercase text-amber-400 flex items-center space-x-1">
-                                <i class="fa-solid fa-trophy"></i>
-                                <span>Cagnotte Globale FCFA</span>
-                            </h4>
-                            <div id="student-total-jackpot" class="text-2xl font-black text-white">0 FCFA</div>
-                            <div class="text-xs space-y-1 text-slate-300 pt-1">
-                                <div class="flex justify-between"><span>🥇 1er (30%)</span><span id="prize-1st" class="font-bold">0 FCFA</span></div>
-                                <div class="flex justify-between"><span>🥈 2ème (10%)</span><span id="prize-2nd" class="font-bold">0 FCFA</span></div>
-                                <div class="flex justify-between"><span>🥉 3ème (10%)</span><span id="prize-3rd" class="font-bold">0 FCFA</span></div>
-                            </div>
-                        </div>
+        <div id="dash-card" class="card hidden">
+            <h3 id="user-display-name">Élève</h3>
+            <p id="user-status" style="color: #f59e0b; font-size: 0.9rem; margin-bottom: 10px;">En attente de validation Admin (500 FCFA)</p>
+            <p>Solde Points : <strong id="user-points" style="color: #10b981; font-size: 1.2rem;">0</strong> PTS</p>
+        </div>
+    </section>
 
-                        <div class="glass-card rounded-2xl p-4">
-                            <h4 class="font-bold text-xs uppercase text-white mb-3 flex items-center space-x-2">
-                                <i class="fa-solid fa-ranking-star text-amber-400"></i>
-                                <span>Classement Général</span>
-                            </h4>
-                            <div id="student-leaderboard-list" class="space-y-1 text-xs"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- PORTAIL ADMIN -->
-        <section id="portal-admin" class="hidden space-y-6">
-            <div class="glass-card rounded-2xl p-4 bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/30 flex justify-between items-center">
-                <div>
-                    <h3 class="font-extrabold text-white text-base flex items-center space-x-2">
-                        <i class="fa-solid fa-user-shield text-amber-400"></i>
-                        <span>Panneau Administration</span>
-                    </h3>
-                    <p class="text-xs text-slate-400">Validation des 500 F, programmation des matchs et attribution de points.</p>
-                </div>
-                <button onclick="triggerWeekendBonus()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-xs uppercase transition-all">
-                    +100 PTS Tous les Élèves
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Validation Paiements FCFA -->
-                <div class="glass-card rounded-2xl p-5 space-y-4">
-                    <h4 class="font-bold text-sm text-white flex items-center space-x-2">
-                        <i class="fa-solid fa-receipt text-amber-400"></i>
-                        <span>Demandes d'accès (500 FCFA)</span>
-                    </h4>
-                    <div id="admin-pending-payments" class="space-y-2 text-xs"></div>
-                </div>
-
-                <!-- Création & Résolution Matchs -->
-                <div class="glass-card rounded-2xl p-5 space-y-4">
-                    <h4 class="font-bold text-sm text-white flex items-center space-x-2">
-                        <i class="fa-solid fa-gamepad text-amber-400"></i>
-                        <span>Créer un Nouveau Match</span>
-                    </h4>
-                    <form onsubmit="handleAddMatch(event)" class="flex gap-2">
-                        <input type="text" id="add-team1" required placeholder="Équipe A (ex: Term D)" class="w-1/2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <input type="text" id="add-team2" required placeholder="Équipe B (ex: 1ère A)" class="w-1/2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-                        <button type="submit" class="px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs">+</button>
-                    </form>
-                    <div id="admin-matches-list" class="space-y-3 text-xs pt-2"></div>
-                </div>
-            </div>
-        </section>
-    </main>
+    <!-- SECTION ADMIN -->
+    <section id="sec-admin" class="hidden">
+        <div class="card">
+            <h2>Panneau Administration</h2>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Gestion des paiements et des points.</p>
+            
+            <h3 style="font-size: 1rem; color: #fff;">Demandes d'accès en attente</h3>
+            <div id="admin-requests" style="margin-top: 10px;"></div>
+        </div>
+    </section>
 
     <script>
-        const ADMIN_PIN = "1927";
-        let isAdminAuthenticated = false;
+        var isAdminUnlocked = false;
 
-        let state = JSON.parse(localStorage.getItem('interclass_db')) || {
-            currentUser: null,
-            users: [],
-            bets: [],
-            matches: [
-                { id: 'm1', team1: 'Terminale D', team2: '1ère A', winner: null, status: 'open' },
-                { id: 'm2', team1: '2nde S', team2: '3ème 1', winner: null, status: 'open' }
-            ]
+        var db = JSON.parse(localStorage.getItem('interclass_data')) || {
+            users: []
         };
 
-        function saveState() {
-            localStorage.setItem('interclass_db', JSON.stringify(state));
+        function saveData() {
+            localStorage.setItem('interclass_data', JSON.stringify(db));
         }
 
-        function switchPortal(portal) {
-            if (portal === 'admin' && !isAdminAuthenticated) {
-                const code = prompt("Veuillez saisir le code d'accès Administrateur :");
-                if (code === ADMIN_PIN) {
-                    isAdminAuthenticated = true;
-                    showToast("Accès Admin accordé !");
-                } else if (code !== null) {
-                    alert("Code d'accès incorrect !");
-                    return;
-                } else {
-                    return;
+        function showSection(section) {
+            document.getElementById('sec-student').classList.add('hidden');
+            document.getElementById('sec-admin').classList.add('hidden');
+
+            if (section === 'student') {
+                document.getElementById('sec-student').classList.remove('hidden');
+            } else if (section === 'admin') {
+                document.getElementById('sec-admin').classList.remove('hidden');
+                renderAdmin();
+            }
+        }
+
+        function openAdminPortal() {
+            if (isAdminUnlocked) {
+                showSection('admin');
+                return;
+            }
+
+            var inputCode = prompt("Veuillez saisir le code d'accès Admin :");
+            if (inputCode === "1927") {
+                isAdminUnlocked = true;
+                alert("Accès accordé !");
+                showSection('admin');
+            } else if (inputCode !== null) {
+                alert("Code incorrect !");
+            }
+        }
+
+        function registerStudent(e) {
+            e.preventDefault();
+            var name = document.getElementById('s-name').value;
+            var method = document.getElementById('s-method').value;
+            var phone = document.getElementById('s-phone').value;
+
+            var newUser = { id: Date.now(), name: name, method: method, phone: phone, points: 0, status: 'pending' };
+            db.users.push(newUser);
+            saveData();
+
+            document.getElementById('form-card').classList.add('hidden');
+            document.getElementById('dash-card').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = name;
+            
+            alert("Votre demande a été envoyée à l'administrateur.");
+        }
+
+        function renderAdmin() {
+            var container = document.getElementById('admin-requests');
+            container.innerHTML = "";
+
+            var pendingUsers = db.users.filter(function(u) { return u.status === 'pending'; });
+
+            if (pendingUsers.length === 0) {
+                container.innerHTML = "<p style='color: #64748b;'>Aucune demande en attente.</p>";
+                return;
+            }
+
+            pendingUsers.forEach(function(u) {
+                var row = document.createElement('div');
+                row.className = 'item-row';
+                row.innerHTML = '<div><strong>' + u.name + '</strong><br><small style="color:#94a3b8">' + u.method + ' - ' + u.phone + '</small></div>';
+                
+                var btn = document.createElement('button');
+                btn.className = 'btn-action';
+                btn.innerText = 'Valider (2000 PTS)';
+                btn.onclick = function() { validateUser(u.id); };
+
+                row.appendChild(btn);
+                container.appendChild(row);
+            });
+        }
+
+        function validateUser(id) {
+            for (var i = 0; i < db.users.length; i++) {
+                if (db.users[i].id === id) {
+                    db.users[i].status = 'confirmed';
+                    db.users[i].points = 2000;
+                    break;
                 }
             }
-
-            document.getElementById('portal-student').classList.toggle('hidden', portal !== 'student');
-            document.getElementById('portal-admin').classList.toggle('hidden', portal !== 'admin');
-            
-            const btnStudent = document.getElementById('btn-portal-student');
-            const btnAdmin = document.getElementById('btn-portal-admin');
-
-            if(portal === 'student') {
-                btnStudent.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-slate-950";
-                btnAdmin.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white";
-            } else {
-                btnAdmin.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 text-slate-950";
-                btnStudent.className = "px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white";
-            }
-            updateViews();
+            saveData();
+            alert("Compte validé avec 2000 Points !");
+            renderAdmin();
         }
-
-        function handleStudentRegistration(e) {
-            e.preventDefault();
-            const name = document.getElementById('reg-fullname').value.trim();
-            const phone = document.getElementById('reg-phone').value.trim();
-            const method = document.getElementById('reg-method').value;
-
-            let user = state.users.find(u => u.phone === phone);
-            if (!user) {
-                user = { id: 'u_' + Date.now(), name, phone, method, status: 'pending', points: 0 };
-                state.users.push(user);
-            }
-
-            state.currentUser = user;
-            saveState();
-
-            document.getElementById('student-auth-card').classList.add('hidden');
-            document.getElementById('student-dashboard').classList.remove('hidden');
-            document.getElementById('student-name-display').innerText = user.name;
-
-            updateViews();
-            showToast("Demande transmise à l'Admin !");
-        }
-
-        function updateViews() {
-            updateStudentDashboard();
-            updateAdminDashboard();
-        }
-
-        function updateStudentDashboard() {
-            if (!state.currentUser) return;
-            const u = state.currentUser;
-            
-            // Re-synchroniser les données du compte
-            const dbUser = state.users.find(x => x.id === u.id);
-            if (dbUser) {
-                state.currentUser = dbUser;
-            }
-
-            document.getElementById('student-points-display').innerText = state.currentUser.points;
-
-            const badge = document.getElementById('student-status-badge');
-            if (state.currentUser.status === 'confirmed') {
-                badge.innerText = "Accès Confirmé (2 000 PTS)";
-                badge.className = "text-xs text-emerald-400 font-semibold";
-            } else {
-                badge.innerText = "En attente de validation Admin (500 FCFA)";
-                badge.className = "text-xs text-amber-400 font-semibold";
-            }
-
-            const confirmedUsers = state.users.filter(x => x.status === 'confirmed').length;
-            const totalJackpot = confirmedUsers * 500;
-            document.getElementById('student-total-jackpot').innerText = totalJackpot.toLocaleString() + " FCFA";
-            document.getElementById('prize-1st').innerText = Math.round(totalJackpot * 0.30).toLocaleString() + " FCFA";
-            document.getElementById('prize-2nd').innerText = Math.round(totalJackpot * 0.10).toLocaleString() + " FCFA";
-            document.getElementById('prize-3rd').innerText = Math.round(totalJackpot * 0.10).toLocaleString() + " FCFA";
-
-            document.getElementById('student-matches-container').innerHTML = state.matches.map(m => {
-                const userBet = state.bets.find(b => b.userId === state.currentUser.id && b.matchId === m.id);
-                const isClosed = m.status === 'closed';
-
-                return `
-                    <div class="glass-card rounded-2xl p-4 space-y-3">
-                        <div class="flex justify-between items-center text-xs text-slate-400">
-                            <span>Rencontre Inter-Classes</span>
-                            <span class="${isClosed ? 'text-red-400' : 'text-emerald-400'} font-bold">${isClosed ? 'Terminé' : 'Paiements & Paris Ouverts'}</span>
-                        </div>
-                        <div class="flex justify-between items-center font-bold text-sm">
-                            <span class="text-amber-400">${m.team1}</span>
-                            <span class="text-xs bg-slate-900 px-2 py-0.5 rounded text-slate-400">VS</span>
-                            <span class="text-amber-400">${m.team2}</span>
-                        </div>
-
-                        ${state.currentUser.status !== 'confirmed' ? `
-                            <div class="text-center text-xs text-amber-400 bg-amber-500/10 p-2 rounded-xl border border-amber-500/20">
-                                L'Admin doit valider votre paiement de 500 FCFA pour débloquer les paris
-                            </div>
-                        ` : `
-                            <div class="grid grid-cols-3 gap-2">
-                                <button onclick="placeBet('${m.id}', 'team1')" ${userBet || isClosed ? 'disabled' : ''} class="py-2 rounded-xl text-xs font-bold ${userBet?.prediction === 'team1' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700'}">Gagnant ${m.team1}</button>
-                                <button onclick="placeBet('${m.id}', 'draw')" ${userBet || isClosed ? 'disabled' : ''} class="py-2 rounded-xl text-xs font-bold ${userBet?.prediction === 'draw' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700'}">Match Nul</button>
-                                <button onclick="placeBet('${m.id}', 'team2')" ${userBet || isClosed ? 'disabled' : ''} class="py-2 rounded-xl text-xs font-bold ${userBet?.prediction === 'team2' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700'}">Gagnant ${m.team2}</button>
-                            </div>
-                        `}
-                    </div>
-                `;
-            }).join('');
-
-            const leaderboard = [...state.users].filter(x => x.status === 'confirmed').sort((a, b) => b.points - a.points);
-            document.getElementById('student-leaderboard-list').innerHTML = leaderboard.length ? leaderboard.map((x, i) => `
-                <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900">
-                    <span class="font-bold text-slate-300">#${i+1} ${x.name}</span>
-                    <span class="font-black text-amber-400">${x.points} PTS</span>
-                </div>
-            `).join('') : `<p class="text-slate-500 text-center py-2">Aucun élève validé pour le moment.</p>`;
-        }
-
-        function placeBet(matchId, prediction) {
-            const u = state.currentUser;
-            if (!u || u.status !== 'confirmed') return;
-            if (u.points < 100) { showToast("Points insuffisants (100 PTS requis) !"); return; }
-
-            u.points -= 100;
-            state.bets.push({ userId: u.id, matchId, prediction });
-            saveState();
-            showToast("Pari enregistré (-100 PTS)");
-            updateViews();
-        }
-
-        function updateAdminDashboard() {
-            const pending = state.users.filter(u => u.status === 'pending');
-            const pendingContainer = document.getElementById('admin-pending-payments');
-
-            pendingContainer.innerHTML = pending.length ? pending.map(u => `
-                <div class="flex justify-between items-center 
+    </script>
+</body>
+                        </html>
+    
