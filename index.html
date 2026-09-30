@@ -73,9 +73,9 @@
             <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">
                 Inscrivez-vous et réglez vos frais d'accès de <strong>500 FCFA</strong> pour recevoir <strong>2 000 Points</strong>.
             </p>
-            <form onsubmit="registerStudent(event)">
+            <div>
                 <label>Nom Complet</label>
-                <input type="text" id="s-name" required placeholder="Ex: Jean Koffi">
+                <input type="text" id="s-name" placeholder="Ex: Jean Koffi">
                 
                 <label>Mode de Paiement (500 FCFA)</label>
                 <select id="s-method">
@@ -86,11 +86,11 @@
                 </select>
 
                 <label>Numéro de Téléphone</label>
-                <input type="tel" id="s-phone" required placeholder="Ex: 90 12 34 56">
+                <input type="tel" id="s-phone" placeholder="Ex: 90 12 34 56">
 
-                <button type="submit" class="btn-submit">J'ai effectué le transfert (500 FCFA)</button>
-            </form>
-        </div>
+                <button type="button" class="btn-submit" onclick="registerStudentDirect()">J'ai effectué le transfert (500 FCFA)</button>
+            </div>
+                
 
         <div id="dash-card" class="card hidden">
             <h3 id="user-display-name">Élève</h3>
