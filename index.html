@@ -8,7 +8,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; color: #f8fafc; padding: 15px; }
         
-        header { display: flex; justify-content: space-between; items-center; padding-bottom: 15px; border-b: 1px solid #334155; margin-bottom: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid #334155; margin-bottom: 20px; }
         .logo { font-size: 1.2rem; font-weight: bold; color: #fbbf24; }
         
         .nav-btns button { padding: 8px 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-left: 5px; }
@@ -24,7 +24,11 @@
         .btn-action { padding: 8px 12px; background-color: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
         .hidden { display: none !important; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #0f172a; border-radius: 8px; margin-bottom: 8px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #0f172a; border-radius: 8px; margin-bottom: 8px; border: 1px solid #334155; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; font-size: 0.9rem; }
+        th { color: #fbbf24; }
     </style>
 </head>
 <body>
@@ -39,10 +43,11 @@
 
     <!-- SECTION ELEVE -->
     <section id="sec-student">
+        <!-- Inscription -->
         <div id="form-card" class="card">
             <h2>Rejoindre le Tournoi InterClass</h2>
             <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">
-                Inscrivez-vous et réglez vos frais d'accès de <strong>500 FCFA</strong>. Après validation, vous recevrez <strong>2 000 Points</strong> pour parier !
+                Inscrivez-vous et réglez vos frais d'accès de <strong>500 FCFA</strong> pour recevoir <strong>2 000 Points</strong>.
             </p>
             <form onsubmit="registerStudent(event)">
                 <label>Nom Complet</label>
@@ -63,10 +68,36 @@
             </form>
         </div>
 
+        <!-- Tableau de bord Élève -->
         <div id="dash-card" class="card hidden">
             <h3 id="user-display-name">Élève</h3>
-            <p id="user-status" style="color: #f59e0b; font-size: 0.9rem; margin-bottom: 10px;">En attente de validation Admin (500 FCFA)</p>
-            <p>Solde Points : <strong id="user-points" style="color: #10b981; font-size: 1.2rem;">0</strong> PTS</p>
+            <p id="user-status" style="color: #f59e0b; font-size: 0.9rem; margin-bottom: 10px;">Statut : En attente de validation Admin</p>
+            <p>Solde Points : <strong id="user-points" style="color: #10b981; font-size: 1.3rem;">0</strong> PTS</p>
+        </div>
+
+        <!-- Zone des Paris -->
+        <div id="bets-card" class="card hidden">
+            <h3>⚽ Parier sur un Match</h3>
+            <div id="matches-list">
+                <!-- Matchs affichés dynamiquement -->
+            </div>
+        </div>
+
+        <!-- Classement Général -->
+        <div class="card">
+            <h3>📊 Classement des Meilleures Équipes / Parieurs</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nom</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <!-- Classement affiché dynamiquement -->
+                </tbody>
+            </table>
         </div>
     </section>
 
@@ -74,22 +105,37 @@
     <section id="sec-admin" class="hidden">
         <div class="card">
             <h2>Panneau Administration</h2>
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Gestion des paiements et des points.</p>
             
-            <h3 style="font-size: 1rem; color: #fff;">Demandes d'accès en attente</h3>
-            <div id="admin-requests" style="margin-top: 10px;"></div>
+            <h3>1. Demandes d'accès en attente</h3>
+            <div id="admin-requests" style="margin-bottom: 20px;"></div>
+
+            <h3>2. Ajouter un Match</h3>
+            <form onsubmit="addMatch(event)">
+                <label>Équipe A</label>
+                <input type="text" id="m-team-a" required placeholder="Ex: Terminale A">
+                
+                <label>Équipe B</label>
+                <input type="text" id="m-team-b" required placeholder="Ex: Première D">
+
+                <button type="submit" class="btn-submit">Créer le Match</button>
+            </form>
         </div>
     </section>
 
     <script>
         var isAdminUnlocked = false;
+        var currentUserId = localStorage.getItem('current_user_id');
 
         var db = JSON.parse(localStorage.getItem('interclass_data')) || {
-            users: []
+            users: [],
+            matches: [
+                { id: 1, teamA: "Terminale A", teamB: "Première D", status: "open", winner: null }
+            ]
         };
 
         function saveData() {
             localStorage.setItem('interclass_data', JSON.stringify(db));
+            renderAll();
         }
 
         function showSection(section) {
@@ -126,32 +172,126 @@
             var method = document.getElementById('s-method').value;
             var phone = document.getElementById('s-phone').value;
 
-            var newUser = { id: Date.now(), name: name, method: method, phone: phone, points: 0, status: 'pending' };
+            var newId = Date.now();
+            var newUser = { id: newId, name: name, method: method, phone: phone, points: 0, status: 'pending' };
             db.users.push(newUser);
-            saveData();
-
-            document.getElementById('form-card').classList.add('hidden');
-            document.getElementById('dash-card').classList.remove('hidden');
-            document.getElementById('user-display-name').innerText = name;
             
+            currentUserId = newId;
+            localStorage.setItem('current_user_id', currentUserId);
+            
+            saveData();
             alert("Votre demande a été envoyée à l'administrateur.");
+        }
+
+        function placeBet(matchId, chosenTeam) {
+            var currentUser = db.users.find(u => u.id == currentUserId);
+            if (!currentUser || currentUser.status !== 'confirmed') {
+                alert("Votre compte doit être validé par l'Admin pour parier.");
+                return;
+            }
+
+            var amount = prompt("Combien de points voulez-vous miser sur " + chosenTeam + " ? (Solde actuel : " + currentUser.points + " PTS)");
+            amount = parseInt(amount);
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("Montant invalide.");
+                return;
+            }
+
+            if (amount > currentUser.points) {
+                alert("Solde insuffisant !");
+                return;
+            }
+
+            currentUser.points -= amount;
+            saveData();
+            alert("Pari enregistré de " + amount + " PTS sur " + chosenTeam + " !");
+        }
+
+        function addMatch(e) {
+            e.preventDefault();
+            var teamA = document.getElementById('m-team-a').value;
+            var teamB = document.getElementById('m-team-b').value;
+
+            db.matches.push({
+                id: Date.now(),
+                teamA: teamA,
+                teamB: teamB,
+                status: "open",
+                winner: null
+            });
+
+            document.getElementById('m-team-a').value = "";
+            document.getElementById('m-team-b').value = "";
+            saveData();
+            alert("Match créé avec succès !");
+        }
+
+        function renderAll() {
+            // Utilisateur courant
+            var currentUser = db.users.find(u => u.id == currentUserId);
+            if (currentUser) {
+                document.getElementById('form-card').classList.add('hidden');
+                document.getElementById('dash-card').classList.remove('hidden');
+                document.getElementById('user-display-name').innerText = currentUser.name;
+                document.getElementById('user-points').innerText = currentUser.points;
+
+                if (currentUser.status === 'confirmed') {
+                    document.getElementById('user-status').innerText = "Statut : Compte Validé ✅";
+                    document.getElementById('user-status').style.color = "#10b981";
+                    document.getElementById('bets-card').classList.remove('hidden');
+                }
+            }
+
+            // Affichage des matchs
+            var matchesContainer = document.getElementById('matches-list');
+            matchesContainer.innerHTML = "";
+            db.matches.forEach(m => {
+                var item = document.createElement('div');
+                item.className = 'item-row';
+                item.innerHTML = `
+                    <div>
+                        <strong>${m.teamA} vs ${m.teamB}</strong>
+                    </div>
+                    <div>
+                        <button class="btn-action" onclick="placeBet(${m.id}, '${m.teamA}')">${m.teamA}</button>
+                        <button class="btn-action" style="background-color: #3b82f6;" onclick="placeBet(${m.id}, '${m.teamB}')">${m.teamB}</button>
+                    </div>
+                `;
+                matchesContainer.appendChild(item);
+            });
+
+            // Classement
+            var leaderboard = document.getElementById('leaderboard-body');
+            leaderboard.innerHTML = "";
+            var sortedUsers = [...db.users].sort((a, b) => b.points - a.points);
+            
+            sortedUsers.forEach((u, index) => {
+                var row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${u.name}</td>
+                    <td><strong>${u.points}</strong> PTS</td>
+                `;
+                leaderboard.appendChild(row);
+            });
         }
 
         function renderAdmin() {
             var container = document.getElementById('admin-requests');
             container.innerHTML = "";
 
-            var pendingUsers = db.users.filter(function(u) { return u.status === 'pending'; });
+            var pendingUsers = db.users.filter(u => u.status === 'pending');
 
             if (pendingUsers.length === 0) {
                 container.innerHTML = "<p style='color: #64748b;'>Aucune demande en attente.</p>";
                 return;
             }
 
-            pendingUsers.forEach(function(u) {
+            pendingUsers.forEach(u => {
                 var row = document.createElement('div');
                 row.className = 'item-row';
-                row.innerHTML = '<div><strong>' + u.name + '</strong><br><small style="color:#94a3b8">' + u.method + ' - ' + u.phone + '</small></div>';
+                row.innerHTML = `<div><strong>${u.name}</strong><br><small style="color:#94a3b8">${u.method} - ${u.phone}</small></div>`;
                 
                 var btn = document.createElement('button');
                 btn.className = 'btn-action';
@@ -164,18 +304,19 @@
         }
 
         function validateUser(id) {
-            for (var i = 0; i < db.users.length; i++) {
-                if (db.users[i].id === id) {
-                    db.users[i].status = 'confirmed';
-                    db.users[i].points = 2000;
-                    break;
-                }
+            var u = db.users.find(x => x.id === id);
+            if (u) {
+                u.status = 'confirmed';
+                u.points = 2000;
+                saveData();
+                alert("Compte validé avec 2000 Points !");
+                renderAdmin();
             }
-            saveData();
-            alert("Compte validé avec 2000 Points !");
-            renderAdmin();
         }
+
+        // Chargement initial
+        renderAll();
     </script>
 </body>
-                        </html>
-    
+                    </html>
+                    
