@@ -437,4 +437,45 @@
 
             if (pendingUsers.length === 0) {
                 container.innerHTML = "<p style='color: #64748b;'>Aucune demande en attente.</p>";
-      
+            } else {
+                pendingUsers.forEach(function(u) {
+                    var row = document.createElement('div');
+                    row.className = 'item-row';
+                    row.innerHTML = '<div><strong>' + u.name + '</strong><br><small style="color:#94a3b8">' + u.method + ' - ' + u.phone + '</small></div>';
+                    
+                    var btn = document.createElement('button');
+                    btn.className = 'btn-action';
+                    btn.innerText = 'Valider (2000 PTS)';
+                    btn.onclick = function() { validateUser(u.id); };
+
+                    row.appendChild(btn);
+                    container.appendChild(row);
+                });
+            }
+
+            var adminMatchesContainer = document.getElementById('admin-matches-list');
+            adminMatchesContainer.innerHTML = "";
+            var openMatches = db.matches.filter(function(m) { return m.status === 'open'; });
+
+            if (openMatches.length === 0) {
+                adminMatchesContainer.innerHTML = "<p style='color: #64748b;'>Aucun match en cours à clôturer.</p>";
+            } else {
+                openMatches.forEach(function(m) {
+                    var row = document.createElement('div');
+                    row.className = 'item-row';
+                    row.innerHTML = '<div><strong>' + m.teamA + ' vs ' + m.teamB + '</strong></div>' +
+                        '<div>' +
+                            '<small style="color:#94a3b8; margin-right:5px;">Gagnant :</small> ' +
+                            '<button class="btn-action" onclick="resolveMatch(' + m.id + ', \'' + m.teamA + '\')">' + m.teamA + '</button> ' +
+                            '<button class="btn-action btn-null" onclick="resolveMatch(' + m.id + ', \'Nul\')">Nul</button> ' +
+                            '<button class="btn-action btn-team-b" onclick="resolveMatch(' + m.id + ', \'' + m.teamB + '\')">' + m.teamB + '</button>' +
+                        '</div>';
+                    adminMatchesContainer.appendChild(row);
+                });
+            }
+        }
+
+        renderAll();
+    </script>
+</body>
+</html>
