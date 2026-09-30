@@ -182,6 +182,9 @@
     </section>
 
     <script>
+        var SUPABASE_URL = "https://eraubxzzojcmtpsgtysn.supabase.co";
+        var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyYXVieHp6b2pjbXRwc2d0eXNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4MDIyMjEsImV4cCI6MjEwNjM3ODIyMX0.aUmuaAKKKjrzXCKSP74dH3G6dPk6SOWQhiUwFWl6Zbk";
+        var _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         var isAdminUnlocked = false;
         var currentUserId = localStorage.getItem('current_user_id');
 
