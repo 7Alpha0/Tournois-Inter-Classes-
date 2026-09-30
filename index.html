@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InterClass - Plateforme de Paris Inter-Classes</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#111827',
+                            900: '#0f172a',
+                            950: '#020617',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card-accent {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- En-tête / Sélecteur de Portail -->
+    <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchPortal('student')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-amber-400 bg-clip-text text-transparent">InterClass</span>
+                    <span class="block text-[10px] font-semibold text-amber-400 tracking-wider uppercase -mt-1">Tournoi & Pronostics</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                <button id="btn-portal-student" onclick="switchPortal('student')" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center space-x-2 bg-amber-500 text-slate-950 shadow-md">
+                    <i class="fa-solid fa-user-graduate"></i>
+                    <span class="hidden sm:inline">Espace</span> Élève
+                </button>
+                <button id="btn-portal-admin" onclick="switchPortal('admin')" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center space-x-2 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span class="hidden sm:inline">Panneau</span> Admin
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+        <!-- PORTAIL ÉLÈVE -->
+        <section id="portal-student" class="space-y-6">
+            <!-- Formulaire de Demande d'Accès -->
+            <div id="student-auth-card" class="glass-card rounded-2xl p-6 sm:p-8 border-2 border-amber-500/30 shadow-2xl relative overflow-hidden">
+                <div class="max-w-2xl mx-auto text-center space-y-4">
+                    <div class="inline-flex p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-400 text-3xl mb-1">
+                        <i class="fa-solid fa-ticket-simple"></i>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Rejoindre le Tournoi InterClass</h2>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                        Inscrivez-vous et réglez vos frais d'accès de <span class="text-amber-400 font-bold">500 FCFA</span>. Après validation, vous recevrez <span class="text-emerald-400 font-bold">2 000 Points</span> pour parier !
+                    </p>
+
+                    <form id="student-reg-form" onsubmit="handleStudentRegistration(event)" class="space-y-4 pt-4 text-left">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Nom Complet</label>
+                            <input type="text" id="reg-fullname" required placeholder="Ex: Jean Koffi" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Mode de Paiement (500 FCFA)</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="pay_method" value="TMoney" checked class="peer sr-only">
+                                    <div class="p-3 text-center rounded-xl bg-slate-900 border border-slate-700 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-400">
+                                        <div class="font-bold text-sm">TMoney</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="pay_method" value="Moov Money" class="peer sr-only">
+                                    <div class="p-3 text-center rounded-xl bg-slate-900 border border-slate-700 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-400">
+                                        <div class="font-bold text-sm">Moov</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="pay_method" value="Flooz" class="peer sr-only">
+                                    <div class="p-3 text-center rounded-xl bg-slate-900 border border-slate-700 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-400">
+                                        <div class="font-bold text-sm">Flooz</div>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="pay_method" value="Wave" class="peer sr-only">
+                                    <div class="p-3 text-center rounded-xl bg-slate-900 border border-slate-700 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-400">
+                                        <div class="font-bold text-sm">Wave</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Numéro de Téléphone</label>
+                            <input type="tel" id="reg-phone" required placeholder="Ex: 90 12 34 56" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                        </div>
+
+                        <button type="submit" class="w-full py-3.5 bg-amber-500 text-slate-950 font-bold rounded-xl shadow-lg hover:bg-amber-400 uppercase tracking-wider text-sm flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>J'ai effectué le transfert (500 FCFA)</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tableau de Bord Élève -->
+            <div id="student-dashboard" class="hidden space-y-6">
+                <div class="rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 glass-card">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div>
+                            <h3 id="student-name-display" class="font-extrabold text-lg text-white">Élève</h3>
+                            <div class="flex items-center space-x-2 text-xs mt-0.5">
+                                <span class="text-slate-400">Statut:</span>
+                                <span id="student-status-badge" class="font-bold text-amber-400">En attente de validation Admin</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 px-5 flex items-center space-x-4">
+                        <div>
+                            <span class="block text-[11px] font-semibold text-slate-400 uppercase">Solde de Points</span>
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-coins text-amber-400 text-lg"></i>
+                                <span id="student-points-display" class="text-2xl font-black text-amber-400">0</span>
+                                <span class="text-xs text-slate-400 font-bold">PTS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                                <i class="fa-solid fa-futbol text-emerald-400"></i>
+                                <span>Matchs & Pronostics</span>
+                            </h3>
+                            <span class="text-xs text-slate-400 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">
+                                Mise: <span class="text-amber-400 font-bold">100 pts</span> | Gain: <span class="text-emerald-400 font-bold">200 pts</span>
+                            </span>
+                        </div>
+                        <div id="student-matches-container" class="space-y-4"></div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="glass-card-accent rounded-2xl p-5 space-y-4">
+                            <h4 class="font-extrabold text-white text-sm uppercase flex items-center space-x-2">
+                                <i class="fa-solid fa-sack-dollar text-amber-400"></i>
+                                <span>Cagnotte Globale FCFA</span>
+                            </h4>
+                            <div class="text-center py-2">
+                                <span id="student-total-jackpot" class="text-3xl font-black text-amber-400">0 FCFA</span>
+                            </div>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between p-2 rounded-lg bg-slate-900 border border-slate-800">
+                                    <span>🥇 1er Place (30%)</span>
+                                    <span id="prize-1st" class="font-bold text-amber-400">0 FCFA</span>
+                                </div>
+                                <div class="flex justify-between p-2 rounded-lg bg-slate-900 border border-slate-800">
+                                    <span>🥈 2ème Place (10%)</span>
+                                    <span id="prize-2nd" class="font-bold text-slate-200">0 FCFA</span>
+                                </div>
+                                <div class="flex justify-between p-2 rounded-lg bg-slate-900 border border-slate-800">
+                                    <span>🥉 3ème Place (10%)</span>
+                                    <span id="prize-3rd" class="font-bold text-amber-600">0 FCFA</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-2xl p-5 space-y-4">
+                            <h4 class="font-bold text-white text-sm flex items-center justify-between">
+                                <span class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-ranking-star text-amber-400"></i>
+                                    <span>Classement Général</span>
+                                </span>
+                            </h4>
+                            <div id="student-leaderboard-list" class="space-y-2 text-xs"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PORTAIL ADMIN -->
+        <section id="portal-admin" class="hidden space-y-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-card rounded-2xl p-4">
+                    <span class="text-xs text-slate-400">Total Encaissé</span>
+                    <h4 id="admin-kpi-revenue" class="text-2xl font-black text-emerald-400 mt-1">0 FCFA</h4>
+                </div>
+                <div class="glass-card rounded-2xl p-4">
+                    <span class="text-xs text-slate-400">Participants Confirmés</span>
+                    <h4 id="admin-kpi-users" class="text-2xl font-black text-white mt-1">0</h4>
+                </div>
+                <div class="glass-card rounded-2xl p-4">
+                    <span class="text-xs text-slate-400">Paiements en attente</span>
+                    <h4 id="admin-kpi-pending" class="text-2xl font-black text-amber-400 mt-1">0</h4>
+                </div>
+                <div class="glass-card rounded-2xl p-4">
+                    <span class="text-xs text-slate-400">Cagnotte Récompenses</span>
+                    <h4 id="admin-kpi-jackpot" class="text-2xl font-black text-amber-400 mt-1">0 FCFA</h4>
+                </div>
+            </div>
+
+            <!-- Boutons d'actions Admin -->
+            <div class="glass-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h4 class="font-bold text-white text-sm">Actions Rapides Admin</h4>
+                    <p class="text-xs text-slate-400">Distribuez des bonus globaux aux participants</p>
+                </div>
+                <button onclick="triggerWeekendBonus()" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-extrabold rounded-xl text-xs uppercase tracking-wider flex items-center space-x-2 shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-gift text-base"></i>
+                    <span>🎁 Bonus du Week-end (+100 PTS Tous les Élèves)</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Validation des paiements (500 FCFA) -->
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+                        <i class="fa-solid fa-receipt text-amber-400"></i>
+                        <span>Validation des Paiements (500 F)</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-900 text-slate-400 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3">Nom</th>
+                                    <th class="p-3">Moyen</th>
+                                    <th class="p-3">Téléphone</th>
+                                    <th class="p-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-payments-table" class="divide-y divide-slate-800"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Gestion des Matchs et Résultats -->
+                <div class="glass-card rounded-2xl p-6 space-y-4">
+                    <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-gamepad text-amber-400"></i>
+                        <span>Gestion des Rencontres</span>
+                    </h3>
+
+                    <!-- Ajouter un nouveau match -->
+                    <form onsubmit="handleAddMatch(event)" class="grid grid-cols-2 gap-2 pb-4 border-b border-slate-800">
+                        <input type="text" id="add-team1" required placeholder="Équipe 1 (ex: Term. D)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <input type="text" id="add-team2" required placeholder="Équipe 2 (ex: 1ère C)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+                        <button type="submit" class="col-span-2 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded-xl text-xs flex items-center justify-center space-x-1 border border-slate-700">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Créer le Match</span>
+                        </button>
+                    </form>
+
+                    <div id="admin-matches-list" class="space-y-3"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let state = {
+            currentUser: null,
+            users: [],
+            bets: [], // { userId, matchId, prediction: 'team1'|'draw'|'team2' }
+            matches: [
+                { id: 'm1', team1: 'Terminale D', team2: '1ère A', winner: null, status: 'open' },
+                { id: 'm2', team1: '2nde S', team2: '3ème 1', winner: null, status: 'open' }
+            ]
+        };
+
+        function switchPortal(portal) {
+            document.getElementById('portal-student').classList.toggle('hidden', portal !== 'student');
+            document.getElementById('portal-admin').classList.toggle('hidden', portal !
